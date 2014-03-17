@@ -25,12 +25,47 @@
  * limitations under the License.
  */
 
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.ServiceTask;
+import org.camunda.bpm.model.bpmn.instance.Task;
+import org.camunda.bpm.model.bpmn.instance.UserTask;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaExecutionListener;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.Collection;
+
 /**
  * @author Sebastian Menski
  */
 public class ModifyInvoiceExample {
 
   public static void main(String[] args) {
+    InputStream resourceAsStream = ModifyInvoiceExample.class.getResourceAsStream("invoice.bpmn");
+    BpmnModelInstance modelInstance = Bpmn.readModelFromStream(resourceAsStream);
+
+    Collection<Task> tasks = modelInstance.getModelElementsByType(Task.class);
+
+    for (Task task : tasks) {
+      task.setName("Task:\n" + task.getName());
+      if (task instanceof UserTask) {
+        System.out.printf("Assignee of task < %s > is < %s >\n",
+          task.getId(), ((UserTask) task).getCamundaAssignee());
+      }
+    }
+
+    ServiceTask serviceTask = modelInstance.newInstance(ServiceTask.class);
+    serviceTask.builder()
+      .id("bankTransfer")
+      .name("Prepare for bank transfer")
+      .camundaClass("org.camunda.bpm.BankTransferService");
+
+    ModelElementInstance prepareBankTransfer = modelInstance.getModelElementById("prepareBankTransfer");
+    prepareBankTransfer.replaceWithElement(serviceTask);
+
+    Bpmn.writeModelToFile(new File("src/main/resources/modify.bpmn"), modelInstance);
   }
 
 

@@ -42,7 +42,9 @@
     require(["bpmn/Bpmn", "dojo/domReady!"], function(Bpmn) {
       new Bpmn().renderUrl("src/main/resources/modify.bpmn", {
         diagramElement : "diagram",
-        overlayHtml : '<div style="position: relative; top:100%"></div>'
+        overlayHtml : '<div style="position: relative; top:100%"></div>',
+        width: '300px',
+        height: '100px'
       }).then(function (bpmn){
         bpmn.zoom(1.0);
       });
